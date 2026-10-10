@@ -1,0 +1,42 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedConnect</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 50px 24px;
+            font-family: Arial, sans-serif;
+            background: #f0f7f4;
+            color: #17352c;
+        }
+        main {
+            max-width: 800px;
+            margin: auto;
+            padding: 36px;
+            background: white;
+            border-radius: 16px;
+        }
+        h1 { color: #087f5b; }
+        .status {
+            display: inline-block;
+            padding: 8px 12px;
+            background: #d3f9e8;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <span class="status">Inventory Service</span>
+        <h1 th:text="${appName}">MedConnect</h1>
+        <p th:text="${message}">Medicine inventory management</p>
+        <hr>
+        <h2>Welcome to MedConnect</h2>
+        <p>Monitor medicine stock, predict shortages, and recommend redistribution.</p>
+    </main>
+</body>
+</html>

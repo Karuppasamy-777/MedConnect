@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Medicine - MedConnect</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f7f6;
+            color: #2c3e50;
+        }
+        main {
+            max-width: 600px;
+            margin: auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eef2f5;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            margin: 0;
+            color: #16a085;
+            font-size: 28px;
+        }
+        .btn-home {
+            text-decoration: none;
+            color: #fff;
+            background-color: #7f8c8d;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .btn-home:hover {
+            background-color: #34495e;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #34495e;
+        }
+        input[type="text"], input[type="number"], input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dce4e6;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #16a085;
+            box-shadow: 0 0 5px rgba(22, 160, 133, 0.2);
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: #16a085;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+        .btn-submit:hover {
+            background-color: #12876f;
+        }
+        .error-alert {
+            background-color: #fce4e4;
+            color: #c0392b;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 5px solid #c0392b;
+            margin-bottom: 25px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <header>
+            <h1>Add New Medicine</h1>
+            <a href="/medicines" class="btn-home">Cancel</a>
+        </header>
+
+        <!-- Display validation error message if it exists in the Model -->
+        <div class="error-alert" th:if="${errorMessage}" th:text="${errorMessage}">
+            Error message goes here.
+        </div>
+
+        <!-- The Thymeleaf Form bound to the empty 'medicine' object -->
+        <form th:action="@{/medicines}" th:object="${medicine}" method="POST">
+            
+            <div class="form-group">
+                <label for="medicineName">Medicine Name (e.g. Paracetamol)</label>
+                <input type="text" id="medicineName" th:field="*{medicineName}" placeholder="Enter medicine name">
+            </div>
+
+            <div class="form-group">
+                <label for="medicineCode">Medicine Code (e.g. PRC-500)</label>
+                <input type="text" id="medicineCode" th:field="*{medicineCode}" placeholder="Enter unique code">
+            </div>
+
+            <div class="form-group">
+                <label for="facilityName">Facility Name</label>
+                <input type="text" id="facilityName" th:field="*{facilityName}" placeholder="Enter facility or hospital name">
+            </div>
+
+            <div class="form-group">
+                <label for="quantityAvailable">Available Quantity</label>
+                <input type="number" id="quantityAvailable" th:field="*{quantityAvailable}" min="0" placeholder="e.g. 500">
+            </div>
+
+            <div class="form-group">
+                <label for="dailyConsumption">Average Daily Consumption</label>
+                <!-- step="any" allows decimal numbers -->
+                <input type="number" step="any" id="dailyConsumption" th:field="*{dailyConsumption}" min="0" placeholder="e.g. 12.5">
+            </div>
+
+            <div class="form-group">
+                <label for="expiryDate">Expiry Date</label>
+                <input type="date" id="expiryDate" th:field="*{expiryDate}">
+            </div>
+
+            <button type="submit" class="btn-submit">Save Medicine</button>
+        </form>
+    </main>
+</body>
+</html>
