@@ -205,6 +205,84 @@
             color: var(--text-light);
         }
 
+        /* Notifications */
+        .notification-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .bell-icon {
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            background: #f4f7f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .bell-icon:hover { background: #eef2f5; }
+
+        .badge-count {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            top: 45px;
+            right: 0;
+            width: 340px;
+            background: white;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .dropdown-header {
+            padding: 12px 16px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--card-border);
+            color: var(--navy);
+        }
+
+        .notification-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--card-border);
+            font-size: 13px;
+        }
+        
+        .notification-item:last-child { border-bottom: none; }
+
+        .notification-item p { margin: 0 0 8px 0; color: var(--text-dark); }
+        .notification-item small { color: var(--text-light); display: block; margin-bottom: 8px; font-size: 11px;}
+        
+        .btn-read {
+            background: var(--teal-light);
+            color: var(--teal);
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-read:hover { background: #bfeadd; }
+
         /* Documentation Footer */
         .doc-footer {
             margin-top: 40px;
@@ -223,6 +301,18 @@
         <header>
             <h1>MedConnect Operations Dashboard</h1>
             <div class="header-actions">
+                <div class="notification-wrapper">
+                    <div class="bell-icon" id="bellIcon" title="Notifications">
+                        🔔
+                        <span class="badge-count" id="unreadCount">0</span>
+                    </div>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="dropdown-header">Unread Notifications</div>
+                        <div id="notificationList">
+                            <div class="notification-item"><p>Loading...</p></div>
+                        </div>
+                    </div>
+                </div>
                 <a href="/medicines/new" class="btn btn-primary">+ Add Medicine</a>
                 <a href="/" class="btn btn-secondary">← Home</a>
             </div>
@@ -308,5 +398,95 @@
             [Expiring Soon] triggers when the Expiry Date is within the next 30 days.
         </div>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const bellIcon = document.getElementById('bellIcon');
+            const dropdown = document.getElementById('notificationDropdown');
+            const unreadCountBadge = document.getElementById('unreadCount');
+            const list = document.getElementById('notificationList');
+            
+            // Toggle dropdown
+            bellIcon.addEventListener('click', () => {
+                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+            });
+
+            // Close dropdown if clicked outside
+            document.addEventListener('click', (e) => {
+                if (!bellIcon.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
+
+            // Fetch notifications securely
+            function loadNotifications() {
+                fetch('http://localhost:8081/api/notifications')
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        list.innerHTML = ''; // Clear loading state
+                        
+                        // Filter unread only
+                        const unread = data.filter(n => !n.isRead);
+                        
+                        if (unread.length > 0) {
+                            unreadCountBadge.textContent = unread.length;
+                            unreadCountBadge.style.display = 'block';
+                            bellIcon.style.opacity = '1';
+                        } else {
+                            unreadCountBadge.style.display = 'none';
+                            list.innerHTML = '<div class="notification-item"><p style="color: #7f8c8d;">No new notifications</p></div>';
+                            return;
+                        }
+
+                        // Safely create DOM elements to prevent Cross-Site Scripting (XSS)
+                        unread.forEach(notification => {
+                            const item = document.createElement('div');
+                            item.className = 'notification-item';
+                            
+                            const text = document.createElement('p');
+                            text.textContent = notification.message; // Safe escaping
+                            
+                            const meta = document.createElement('small');
+                            meta.textContent = `To: ${notification.recipientFacility} | ${new Date(notification.createdAt).toLocaleString()}`;
+                            
+                            const btn = document.createElement('button');
+                            btn.className = 'btn-read';
+                            btn.textContent = 'Mark as read';
+                            btn.onclick = () => markAsRead(notification.id);
+
+                            item.appendChild(text);
+                            item.appendChild(meta);
+                            item.appendChild(btn);
+                            list.appendChild(item);
+                        });
+                    })
+                    .catch(error => {
+                        console.log('Notification service is unavailable (Port 8081). This is handled gracefully.', error);
+                        bellIcon.style.opacity = '0.4';
+                        bellIcon.title = 'Notification Service Offline';
+                        list.innerHTML = '<div class="notification-item"><p style="color: #e74c3c;">Service Offline</p></div>';
+                    });
+            }
+
+            // Mark as read action
+            window.markAsRead = function(id) {
+                fetch(`http://localhost:8081/api/notifications/${id}/read`, {
+                    method: 'PATCH'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        loadNotifications(); // Reload list to update UI immediately
+                    }
+                })
+                .catch(err => console.error('Error marking as read:', err));
+            }
+
+            // Initial load
+            loadNotifications();
+        });
+    </script>
 </body>
 </html>
